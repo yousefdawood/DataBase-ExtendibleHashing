@@ -6,7 +6,7 @@
  *          name: the name o the file
  * Output: return the file handler on success or -1 on failure
  */
-int createFile(int size,char * name)
+int createFile(int size,char * name, int type)
 {
 
     int fd;
@@ -34,7 +34,7 @@ int createFile(int size,char * name)
 	perror("Error calling lseek() to 'stretch' the file");
         return 1;
     }
-
+    
     /* write just one byte at the end */
     result = write(fd, "", 1);
     if (result < 0) {
@@ -43,6 +43,32 @@ int createFile(int size,char * name)
 			return -1;
     	}
     }
+    
+    if(type == 0)// Directory
+    {
+        Directory d;
+        d.depth = 1;
+        DirectoryRecord r;
+        r.id = 0;
+        r.offset = 0;
+        d.records.push_back(r);
+        DirectoryRecord r2;
+        r2.id = 0;
+        r2.offset = sizeof(Bucket);
+        d.records.push_back(r2);
+        pwrite(fd, &d, sizeof(Directory), 0);
+    }
+    if (type == 1)// data file
+    {
+        Bucket b1;
+        b1.valid = 1;
+        b1.depth = 1;
+        pwrite(fd, &b1, sizeof(Bucket),0);
+        pwrite(fd, &b1, sizeof(Bucket),sizeof(Bucket));
+    }
+    
+
+
     else  {//file exists
     	//| O_EXCL
     	    fd = open(name, O_RDWR  , (mode_t)0600);

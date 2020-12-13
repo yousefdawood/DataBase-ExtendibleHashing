@@ -57,7 +57,7 @@ struct Directory
 
 
 //Check the create File
-int createFile(int size, char *);
+int createFile(int size, char *, int type);//type 0: Directory, type 1: data file
 
 //check the extendibleHashing.cpp File
 int deleteItem(int fdh, int fbh, int key);
