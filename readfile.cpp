@@ -53,7 +53,7 @@ int createFile(int size,char * name, int type)
         r.offset = 0;
         d.records.push_back(r);
         DirectoryRecord r2;
-        r2.id = 0;
+        r2.id = 1;
         r2.offset = sizeof(Bucket);
         d.records.push_back(r2);
         pwrite(fd, &d, sizeof(Directory), 0);
