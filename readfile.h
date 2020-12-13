@@ -25,14 +25,15 @@ using namespace std;
 #define RECORDSPERBUCKET 2                //No. of records inside each Bucket
 #define BUCKETSIZE sizeof(Bucket)         //Size of the bucket (in bytes)
 #define FILESIZE BUCKETSIZE *MBUCKETS     //+ OVERFLOWLISTSIZE*sizeof(DataItem)*MBUCKETS // size of file
-#define NULL 0   // predefined null;                                                            
+#define NULL 0   // predefined null;     
+#define DATAFILESIZE HASHNUMBER*sizeof(Bucket)
+#define DIRECTORYFILESIZE (HASHNUMBER+10)*sizeof(DirectoryRecord)                                                       
 
 //Data Record inside the file
 struct DataItem
 {
    int valid; //0 means invalid record, 1 = valid record
    int key;
-   int nextOffset = NULL;
 };
 
 //Each bucket contains number of records
@@ -67,5 +68,6 @@ int insertItem(int fdh, int fbh, int key);
 int DisplayBucketsFile(int fbh);
 int DisplayDirectoriesFile(int fdh, int fbh);
 int searchItem(int fdh, int fbh, int key, int *count);
+void colapseDirectory(int fdh);
 
 #endif /* READFILE_H_ */
