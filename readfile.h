@@ -41,7 +41,7 @@ int createFile(int size, char *);
 
 //check the extendibleHashing.cpp File
 int deleteItem(int fdh, int fbh, int key);
-int insertItem(int fdh, int fbh, DataItem item);
+int insertItem(int fdh, int fbh, int key);
 int DisplayBucketsFile(int fbh);
 int DisplayDirectoriesFile(int fdh);
 int searchItem(int fdh, int fbh, int key, int *count);

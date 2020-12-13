@@ -7,6 +7,7 @@ int modeHashCode(int key)
 }
 
 
+// Covert decimal to binary given a decimal number
 int* decToBinary(int n) 
 { 
     // array to store binary number 
@@ -24,7 +25,7 @@ int* decToBinary(int n)
     return binaryNum; 
 }
 
-
+// covert binary to decimal given binary number in array form
 int binaryToDecimal(int* n, int size)
 {
     int dec_value = 0;
@@ -57,17 +58,38 @@ int getDirectoryId(int key, int depth){
     return id;
 }
 
-int insertItem(int fdh, int fbh, DataItem item){
+// Insert a new key 
+/* fdh: file handle of directory file
+   fbh: file handle of buckets file
+   key: key to be inserted
+
+   returns offset where key is inserted
+*/
+int insertItem(int fdh, int fbh, int key){
 
 }
 
+// Search for a key 
+/* fdh: file handle of directory file
+   fbh: file handle of buckets file
+   key: key to be searched for 
 
-int searchItem(int fdh, int fbh, int key, int *count){
+   returns offset where key is found
+   else -1;
+*/
+int searchItem(int fdh, int fbh, int key){
 
 
 }
 
+// delete a key if exist 
+/* fdh: file handle of directory file
+   fbh: file handle of buckets file
+   key: key to be searched for 
 
+   returns -1 if key not found
+   else 1;
+*/
 int deleteItem(int fdh, int fbh, int key){
 
 
