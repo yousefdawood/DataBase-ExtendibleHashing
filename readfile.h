@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
+#include<math.h>
+#include<iostream>
 
 using namespace std;
 
@@ -51,7 +53,7 @@ struct DirectoryRecord
 struct Directory
 {
    int depth; //Global depth
-   vector<DirectoryRecord> records;
+   DirectoryRecord records[2];
 };
 
 
@@ -63,7 +65,7 @@ int createFile(int size, char *, int type);//type 0: Directory, type 1: data fil
 int deleteItem(int fdh, int fbh, int key);
 int insertItem(int fdh, int fbh, int key);
 int DisplayBucketsFile(int fbh);
-int DisplayDirectoriesFile(int fdh);
+int DisplayDirectoriesFile(int fdh, int fbh);
 int searchItem(int fdh, int fbh, int key, int *count);
 
 #endif /* READFILE_H_ */

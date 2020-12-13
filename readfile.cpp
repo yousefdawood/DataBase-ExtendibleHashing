@@ -36,13 +36,13 @@ int createFile(int size,char * name, int type)
     }
     
     /* write just one byte at the end */
-    result = write(fd, "", 1);
+    /*result = write(fd, "", 1);
     if (result < 0) {
 		close(fd);
 		perror("Error writing a byte at the end of the file");
 			return -1;
     	}
-    }
+    }*/
     
     if(type == 0)// Directory
     {
@@ -51,11 +51,11 @@ int createFile(int size,char * name, int type)
         DirectoryRecord r;
         r.id = 0;
         r.offset = 0;
-        d.records.push_back(r);
+        d.records[0] = r;
         DirectoryRecord r2;
         r2.id = 1;
         r2.offset = sizeof(Bucket);
-        d.records.push_back(r2);
+        d.records[1] = r2;
         pwrite(fd, &d, sizeof(Directory), 0);
     }
     if (type == 1)// data file
@@ -63,11 +63,19 @@ int createFile(int size,char * name, int type)
         Bucket b1;
         b1.valid = 1;
         b1.depth = 1;
+        for (size_t i = 0; i < RECORDSPERBUCKET; i++)
+        {
+            DataItem d;
+            d.valid = 0;
+            d.key = -1;
+            b1.dataItem[i] = d;
+        }
+        
         pwrite(fd, &b1, sizeof(Bucket),0);
         pwrite(fd, &b1, sizeof(Bucket),sizeof(Bucket));
     }
     
-
+    }
 
     else  {//file exists
     	//| O_EXCL
