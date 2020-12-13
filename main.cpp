@@ -1,8 +1,6 @@
 #include "readfile.h"
 #include <iostream>
 
-#include"readfile.cpp"
-#include"extendibleHashing.cpp"
 #define DATAFILESIZE HASHNUMBER*sizeof(Bucket)
 #define DIRECTORYFILESIZE (HASHNUMBER+10)*sizeof(DirectoryRecord)
 using namespace std;

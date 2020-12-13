@@ -321,6 +321,7 @@ int searchItem(int fdh, int fbh, int key){
 
    returns depth of directory file (global depth)
 */
+/*
 void colapseDirectory(int fdh){
     struct Directory read_dir_data;
     Directory write_dir_data;
@@ -353,7 +354,7 @@ void colapseDirectory(int fdh){
         }
     }
     DisplayDirectoriesFile(fdh);
-}
+}*/
 
 
 // delete a key if exist 
