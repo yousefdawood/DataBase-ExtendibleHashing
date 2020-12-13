@@ -68,11 +68,12 @@ int createFile(int size,char * name, int type)
         {
             DataItem d;
             d.valid = 0;
-            d.key = -1;
+            d.key = 20;
             b1.dataItem[i] = d;
         }
         
         pwrite(fd, &b1, sizeof(Bucket),0);
+        //b1.dataItem[0].key = 21;
         pwrite(fd, &b1, sizeof(Bucket),sizeof(Bucket));
     }
     

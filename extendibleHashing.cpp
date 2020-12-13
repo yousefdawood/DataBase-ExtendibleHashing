@@ -320,7 +320,8 @@ int DisplayDirectoriesFile(int fdh, int fbh){
     Directory d;
     pread(fdh, &d, sizeof(Directory), 0);
     cout <<"Global Depth = "<<d.depth<<endl;
-    for (int i = 0; i < sizeof(d.records)/sizeof(d.records[0]); i++)
+    cout<<"Directory size = "<< (int)pow(2,d.depth)<<endl;
+    for (int i = 0; i < (int)pow(2,d.depth); i++)
     {
         // print each record
         cout<<"Record ID = "<<d.records[i].id<<";  Bucket Offset = "<<d.records[i].offset<<endl;
