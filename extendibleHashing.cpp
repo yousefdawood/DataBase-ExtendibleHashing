@@ -8,8 +8,8 @@ int modeHashCode(int key)
 
 
 // Covert decimal to binary given a decimal number
-int* decToBinary(int n) 
-{ 
+int* decToBinary(int n) //4->[0,0,1]
+{
     // array to store binary number 
     int binaryNum[BITSCOUNT]={0}; 
   
@@ -26,7 +26,7 @@ int* decToBinary(int n)
 }
 
 // covert binary to decimal given binary number in array form
-int binaryToDecimal(int* n, int size)
+int binaryToDecimal(int* n, int size) //[1,0,0] -> 4
 {
     int dec_value = 0;
  
