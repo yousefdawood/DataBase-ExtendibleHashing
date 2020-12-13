@@ -22,6 +22,19 @@ int* decToBinary(int n) //4->[0,0,1]
         n = n / 2; 
         i++; 
     }
+    //reverse array
+    int start = 0;
+    int end = BITSCOUNT-1;
+    while (start < end)
+    {
+        int temp = binaryNum[start]; 
+        binaryNum[start] = binaryNum[end];
+        binaryNum[end] = temp;
+        start++;
+        end--;
+    } 
+
+
     return binaryNum; 
 }
 
