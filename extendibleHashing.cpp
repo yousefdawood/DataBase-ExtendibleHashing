@@ -33,7 +33,7 @@ int offsetOfNewBucket(int fbh){
 int* decToBinary(int n) //4->[0,0,1]
 {
     // array to store binary number 
-    int binaryNum[BITSCOUNT]={0}; 
+    int *binaryNum= new int[BITSCOUNT]; 
   
     // counter for binary array 
     int i = 0; 
@@ -100,23 +100,31 @@ int getDirectoryId(int key, int depth){
 
    returns offset where key is inserted
 */
-/*
+
 int insertItem(int fdh, int fbh, int key){
     // hash the key
     int newKey = modeHashCode(key);
-    //ReadDirectory
+    //Read Directory
     Directory d;
+    
     ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
 	if (result <= 0) //either an error happened in the pread or it hit an unallocated space
 	{				 // perror("some error occurred in pread");
 		return -1;
 	}
+   
     // get key in bit representation
     int * keyInBits = decToBinary(newKey);
+    for (int i = 0; i < BITSCOUNT; i++)
+    {
+        cout<<keyInBits[i]<<" ";
+    }
+    cout<<endl;
     // get the bucket that the key will be inserted into
     
     //get the bucket record in the directory table
     int bucketRecordId = binaryToDecimal(keyInBits,d.depth);
+    
     DirectoryRecord bucketRecord = d.records[bucketRecordId];
 
     //get the bucket
@@ -139,10 +147,11 @@ int insertItem(int fdh, int fbh, int key){
         }
         
     }
+    
     // if no space availabe then need to expand
     //first find offset for new bucket
     int newBucketOffset = offsetOfNewBucket(fbh);
-
+    cout<<"newBucketOffset = "<<newBucketOffset<<endl;
     //check on global and local depth
     if (d.depth == bucket.depth)// new to expand the directory
     {
@@ -167,8 +176,10 @@ int insertItem(int fdh, int fbh, int key){
         {
             keys[i] = bucket.dataItem[i].key;
             bucket.dataItem[i].valid = 0;
-            bucket.depth += 1;
         }
+        bucket.depth += 1;
+        //add modified bucket to the file
+        pwrite(fbh,&bucket,sizeof(Bucket),bucketRecord.offset);
         //add the new key to the list of keys
         
         keys[RECORDSPERBUCKET] = key;
@@ -177,6 +188,7 @@ int insertItem(int fdh, int fbh, int key){
         Directory newDirectory;
         // increase depth by 1
         newDirectory.depth = d.depth+1;
+        newDirectory.records = new DirectoryRecord[(int)pow(2,newDirectory.depth)]; 
 
         //handle the pointers
         int dSize = (int)pow(2,d.depth);
@@ -236,23 +248,30 @@ int insertItem(int fdh, int fbh, int key){
         {
             keys[i] = bucket.dataItem[i].key;
             bucket.dataItem[i].valid = 0;
-            bucket.depth += 1;
+            
         }
+        bucket.depth += 1;
+        //add modified bucket to the file
+        pwrite(fbh,&bucket,sizeof(Bucket),bucketRecord.offset);
         //add the new key to the list of keys
         keys[RECORDSPERBUCKET] = key;
 
         //third adjust the directory file: adjust the offset value of the records
 
         // number of recordes point to the bucket
-        // # = 2^(global depth - local depth)
-        int recordsNum = (int)pow(2,(d.depth-bucket.depth));
+        // # = 2^(global depth - local depth (old one))
+        int recordsNum = (int)pow(2,(d.depth-(bucket.depth-1)));
         bool firstHalfOfRecords = true;
         int aux = 0;//to check if i finished the fisrt half
-        for (int i = 0; i < d.records.size(); i++)
+        for (int i = 0; i < (int)pow(2,d.depth); i++)
         {
             if (aux >= recordsNum/2)
             {
                 firstHalfOfRecords = false;
+            }
+            if(aux >= recordsNum)
+            {
+                break;
             }
             
             if (d.records[i].offset == bucketRecord.offset)
@@ -282,7 +301,7 @@ int insertItem(int fdh, int fbh, int key){
     return 1;
     
 }
-*/
+
 // Search for a key 
 /* fdh: file handle of directory file
    fbh: file handle of buckets file
