@@ -95,6 +95,47 @@ int searchItem(int fdh, int fbh, int key){
 
 }
 
+
+/* Function to colapse the directory file if possible 
+   fdh: file handle of directory file
+
+   returns depth of directory file (global depth)
+*/
+void colapseDirectory(int fdh){
+    struct Directory read_dir_data;
+    Directory write_dir_data;
+    ssize_t result_r = pread(fdh, &read_dir_data, sizeof(Directory), 0);
+    int new_depth = read_dir_data.depth;
+    bool can_colapse = true;
+    for(int i =0; i<read_dir_data.records.size()/2; i++){
+        if(read_dir_data.records[2*i].offset != read_dir_data.records[2*i+1].offset){
+            can_colapse = false;
+            break;
+        }
+    }
+
+    if(can_colapse){
+        new_depth = read_dir_data.depth - 1;
+        vector<DirectoryRecord> new_records;
+        
+        for(int i =0; i<read_dir_data.records.size()/2; i++){
+            struct DirectoryRecord record;
+            record.id = read_dir_data.records[2*i].id / 2;
+            record.offset = read_dir_data.records[2*i].offset;
+            new_records.push_back(record);
+        }
+
+        write_dir_data.depth = new_depth;
+        write_dir_data.records = new_records;
+        int result_w = pwrite(fdh, &write_dir_data, sizeof(Directory), 0);
+        if (result_w < sizeof(Directory)){
+            perror("some error occurred in pwrite while wrting the new directory file.");
+        }
+    }
+    DisplayDirectoriesFile(fdh);
+}
+
+
 // delete a key if exist 
 /* fdh: file handle of directory file
    fbh: file handle of buckets file
@@ -114,7 +155,32 @@ int DisplayBucketsFile(int fbh){
 
 }
 
-int DisplayDirectoriesFile(int fdh){
+int DisplayDirectoriesFile(int fdh, int fbh){
 
+    Directory d;
+    pread(fdh, &d, sizeof(Directory), 0);
+    cout <<"Global Depth = "<<d.depth<<endl;
+    cout<<"Directory size = "<< (int)pow(2,d.depth)<<endl;
+    for (int i = 0; i < (int)pow(2,d.depth); i++)
+    {
+        // print each record
+        cout<<"Record ID = "<<d.records[i].id<<";  Bucket Offset = "<<d.records[i].offset<<endl;
+        
+        Bucket b;
+        pread(fbh, &b, sizeof(Bucket), d.records[i].offset);
+        
+        cout<<"Bucket depth = "<<b.depth<<endl;
+        for (int j = 0; j < RECORDSPERBUCKET; j++)
+        {
+            if (b.dataItem[j].valid == 1)
+            {
+                cout<<b.dataItem[j].key<<" ";
+            }
+            
+        }
+        cout<<endl;
+        
+    }
+    
 
 }
