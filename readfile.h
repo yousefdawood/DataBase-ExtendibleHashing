@@ -53,7 +53,7 @@ struct DirectoryRecord
 struct Directory
 {
    int depth; //Global depth
-   DirectoryRecord records[2];
+   DirectoryRecord * records;
 };
 
 
