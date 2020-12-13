@@ -7,8 +7,8 @@ using namespace std;
 
 int main(){
 
-    int dataf = createFile(DATAFILESIZE, "DataFile", 1);
-    int directoryf = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+    int fbh = createFile(DATAFILESIZE, "DataFile", 1);
+    int fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
 
     return 0;
 }
