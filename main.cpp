@@ -4,8 +4,6 @@
 
 using namespace std;
 void InsertSimpleTestCase(int fdh, int fbh);
-void InsertAdvancedTestCase1(int fdh, int fbh);
-void InsertDeleteTestCase1(int fdh, int fbh);
 void TestCase(int fdh, int fbh)
 {
 
@@ -80,38 +78,5 @@ void InsertSimpleTestCase(int fdh, int fbh)
     insertItem(fdh, fbh, 13);
     insertItem(fdh, fbh, 25);
     insertItem(fdh, fbh, 1);
-    DisplayDirectoriesFile(fdh, fbh);
-}
-void InsertAdvancedTestCase1(int fdh, int fbh)
-{
-    insertItem(fdh, fbh, 1);
-    insertItem(fdh, fbh, 2);
-    insertItem(fdh, fbh, 3);
-    insertItem(fdh, fbh, 31);
-    insertItem(fdh, fbh, 30);
-    insertItem(fdh, fbh, 16);
-    DisplayDirectoriesFile(fdh, fbh);
-}
-void InsertDeleteTestCase1(int fdh, int fbh)
-{
-    insertItem(fdh, fbh, 1);
-    insertItem(fdh, fbh, 2);
-    insertItem(fdh, fbh, 3);
-    insertItem(fdh, fbh, 31);
-    insertItem(fdh, fbh, 30);
-    insertItem(fdh, fbh, 16);
-    printf("---------------------------------------------------------------------\n");
-
-    DisplayDirectoriesFile(fdh, fbh);
-    printf("---------------------------------------------------------------------\n");
-
-    deleteItem(fdh, fbh, 31);
-    deleteItem(fdh, fbh, 30);
-    deleteItem(fdh, fbh, 16);
-    DisplayDirectoriesFile(fdh, fbh);
-
-    printf("---------------------------------------------------------------------\n");
-
-    deleteItem(fdh, fbh, 2);
     DisplayDirectoriesFile(fdh, fbh);
 }
