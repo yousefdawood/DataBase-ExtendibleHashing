@@ -72,6 +72,7 @@ int binaryToDecimal(int *n, int size) //[1,0,0] -> 4
     int i = size - 1;
     while (i >= 0)
     {
+
         dec_value += n[i] * base;
 
         base = base * 2;
@@ -79,6 +80,29 @@ int binaryToDecimal(int *n, int size) //[1,0,0] -> 4
     }
 
     return dec_value;
+}
+
+// get directory number that is budy with deleted bucket
+
+int getBudyBucket(int dirId, int depth)
+{
+    int *dirBits = decToBinary(dirId);
+
+    // for (int i = 0; i < BITSCOUNT; i++)
+    // {
+    //     cout << dirBits[i] << " ";
+    // }
+    // cout << endl;
+
+    dirBits[BITSCOUNT - 1] = 1 - dirBits[BITSCOUNT - 1];
+
+    // for (int i = 0; i < BITSCOUNT; i++)
+    // {
+    //     cout << dirBits[i] << " ";
+    // }
+    // cout << endl;
+
+    return binaryToDecimal(dirBits, 5);
 }
 
 // Insert a new key
@@ -93,7 +117,6 @@ int insertItem(int fdh, int fbh, int key)
 {
     // hash the key
     int newKey = modeHashCode(key);
-    cout << " ------------------------------" << newKey << " ------------------------------" << endl;
     //Read Directory
     Directory d;
 
@@ -107,9 +130,9 @@ int insertItem(int fdh, int fbh, int key)
     int *keyInBits = decToBinary(newKey);
     for (int i = 0; i < BITSCOUNT; i++)
     {
-        cout << keyInBits[i] << " ";
+        //cout << keyInBits[i] << " ";
     }
-    cout << endl;
+    //cout << endl;
     // get the bucket that the key will be inserted into
 
     //get the bucket record in the directory table
@@ -140,7 +163,7 @@ int insertItem(int fdh, int fbh, int key)
     // if no space availabe then need to expand
     //first find offset for new bucket
     int newBucketOffset = offsetOfNewBucket(fbh);
-    cout << "newBucketOffset = " << newBucketOffset << endl;
+    //cout << "newBucketOffset = " << newBucketOffset << endl;
     //check on global and local depth
     if (d.depth == bucket.depth) // new to expand the directory
     {
@@ -294,12 +317,11 @@ vector<int> searchItem(int fdh, int fbh, int key)
 {
     // hash the key
     int newKey = modeHashCode(key);
+    // cout << "newkey = " + to_string(newKey) + "\n";
     //ReadDirectory
     Directory d;
     vector<int> p;
-    p.push_back(-1);
-    p.push_back(-1);
-    p.push_back(-1);
+
     ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
     if (result <= 0) //either an error happened in the pread or it hit an unallocated space
     {                // perror("some error occurred in pread");
@@ -311,6 +333,9 @@ vector<int> searchItem(int fdh, int fbh, int key)
 
     //get the bucket record in the directory table
     int bucketRecordId = binaryToDecimal(keyInBits, d.depth);
+
+    // cout << "record id = " + to_string(bucketRecordId) + "\n";
+
     DirectoryRecord bucketRecord = d.records[bucketRecordId];
 
     //get the bucket
@@ -324,8 +349,14 @@ vector<int> searchItem(int fdh, int fbh, int key)
             p.push_back(bucketRecordId);      //id of directory
             p.push_back(bucketRecord.offset); //bucket offset holding the record
             p.push_back(i);                   // index of the record in the data items array
+
+            return p;
         }
     }
+
+    p.push_back(-1);
+    p.push_back(-1);
+    p.push_back(-1);
 
     return p;
 }
@@ -389,6 +420,154 @@ int colapseDirectory(int fdh)
 */
 int deleteItem(int fdh, int fbh, int key)
 {
+    // search for the given key
+    vector<int> searchedKey = searchItem(fdh, fbh, key);
+
+    if (searchedKey[0] == -1) // check that key exist
+    {
+        // key doesnot exist
+        cout << " Delete failed ....  Key ->  " + to_string(key) + " not found\n";
+        return -1;
+        // cout << " Key ->  " + to_string(key) + " deleted successfully\n ";
+    }
+
+    // get key location
+    int dirId = searchedKey[0], offset = searchedKey[1], bucketIdx = searchedKey[2];
+
+    // cout << "dirId = " << dirId << "  offset = " << offset << "  bucketIdx = " << bucketIdx << endl;
+
+    // get the bucket
+    Bucket bucket;
+    ssize_t result = pread(fbh, &bucket, sizeof(Bucket), offset);
+
+    // mark data item as invlid
+    bucket.dataItem[bucketIdx].valid = 0;
+
+    // write the change in bucket
+    pwrite(fbh, &bucket, sizeof(Bucket), offset);
+
+    cout << " Key ->  " + to_string(key) + " deleted successfully\n ";
+
+    // check if the bucket become empty
+
+    vector<int> keysINbuckets;
+    int count = 0;
+    for (size_t i = 0; i < RECORDSPERBUCKET; i++)
+    {
+        if (bucket.dataItem[i].valid == 1)
+        {
+            count++;
+            keysINbuckets.push_back(bucket.dataItem[i].key);
+            // cout << bucket.dataItem->key << endl;
+        }
+    }
+
+    // if (count == 0)
+    // {
+    //     // if bucket become empty delete bucket and adjust directory point to its budy bucket
+    //     bucket.valid = 0;
+    //     pwrite(fbh, &bucket, sizeof(Bucket), offset);
+    //     int budyBucket = getBudyBucket(dirId, bucket.depth);
+
+    //     Directory d;
+
+    //     ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
+    //     if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+    //     {                // perror("some error occurred in pread");
+    //         return -3;
+    //     }
+
+    //     // change offset of the dir that point to the deleted record
+
+    //     Directory newDirectory;
+    //     newDirectory.depth = d.depth;
+    //     newDirectory.records = d.records;
+
+    //     cout << "first offset " << newDirectory.records[dirId].offset << "   second offset " << newDirectory.records[budyBucket].offset << endl;
+
+    //     newDirectory.records[dirId].offset = newDirectory.records[budyBucket].offset;
+
+    //     ssize_t r = pwrite(fdh, &newDirectory, sizeof(Directory), 0);
+
+    //     colapseDirectory(fdh);
+    // }
+    //else // check if this bucket can be merged with its budy bucket
+    {
+        int budyBucket = getBudyBucket(dirId, bucket.depth);
+        Directory d;
+
+        ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
+        if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+        {                // perror("some error occurred in pread");
+            return -3;
+        }
+        int budyBucketOffset = d.records[budyBucket].offset;
+
+        // get the bucket
+        Bucket bucket2;
+        result = pread(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
+
+        for (int i = 0; i < RECORDSPERBUCKET; i++)
+        {
+            if (bucket2.dataItem[i].valid == 1)
+            {
+                keysINbuckets.push_back(bucket2.dataItem[i].key);
+            }
+        }
+
+        if (keysINbuckets.size() <= RECORDSPERBUCKET)
+        {
+            // merge buckets
+            // delete first bucket
+            bucket.valid = 0;
+            pwrite(fbh, &bucket, sizeof(Bucket), offset);
+
+            Directory d;
+
+            result = pread(fdh, &d, sizeof(Directory), 0);
+            if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+            {                // perror("some error occurred in pread");
+                return -3;
+            }
+
+            // change offset of the dir that point to the deleted record
+
+            Directory newDirectory;
+            newDirectory.depth = d.depth;
+            newDirectory.records = d.records;
+
+            // cout << "first offset " << newDirectory.records[dirId].offset << "   second offset " << newDirectory.records[budyBucket].offset << endl;
+
+            newDirectory.records[dirId].offset = newDirectory.records[budyBucket].offset;
+
+            // change depth of the body bucket and merge content
+            bucket2.depth--;
+
+            for (int i = 0; i < RECORDSPERBUCKET; i++)
+            {
+                if (bucket2.dataItem[i].valid == 1)
+                {
+                    bucket2.dataItem[i].valid = 0;
+                }
+            }
+
+            for (int i = 0; i < keysINbuckets.size(); i++)
+            {
+
+                bucket2.dataItem[i].valid = 1;
+                bucket2.dataItem[i].key = keysINbuckets[i];
+            }
+            // write the change in bucket
+            pwrite(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
+            ssize_t r = pwrite(fdh, &newDirectory, sizeof(Directory), 0);
+
+            colapseDirectory(fdh);
+        }
+    }
+
+    return 1;
+
+    // cout << " The bucket has " << count << " records\n";
 }
 
 int DisplayDirectoriesFile(int fdh, int fbh)
