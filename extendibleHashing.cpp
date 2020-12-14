@@ -374,6 +374,8 @@ int colapseDirectory(int fdh)
     Directory write_dir_data;
     pread(fdh, &read_dir_data, sizeof(Directory), 0);
     int new_depth = read_dir_data.depth;
+    if (new_depth == 1)
+        return 1;
     int size = (int)pow(2, read_dir_data.depth);
     bool can_colapse = true;
     for (int i = 0; i < size / 2; i++)
