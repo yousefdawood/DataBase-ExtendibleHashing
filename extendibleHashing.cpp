@@ -78,21 +78,6 @@ int binaryToDecimal(int* n, int size) //[1,0,0] -> 4
     return dec_value;
 }
 
-//This function returns the directory id given the key and the depth
-int getDirectoryId(int key, int depth){
-    int *binary = decToBinary(key);
-    int i= BITSCOUNT-1;
-    int j = 0;
-    int binaryNum[depth];
-    while(j<depth){
-        binaryNum[j]=binary[i];
-        j++;
-    }
-
-    int id = binaryToDecimal(binaryNum, depth);
-    return id;
-}
-
 // Insert a new key 
 /* fdh: file handle of directory file
    fbh: file handle of buckets file
@@ -307,11 +292,46 @@ int insertItem(int fdh, int fbh, int key){
    fbh: file handle of buckets file
    key: key to be searched for 
 
-   returns offset where key is found
-   else -1;
+   returns <Id of directory pointing to the bucket, offset of bucket, index of data item in the array>
+   else <-1, -1, -1>;
 */
-int searchItem(int fdh, int fbh, int key){
+vector<int> searchItem(int fdh, int fbh, int key){
+    // hash the key
+    int newKey = modeHashCode(key);
+    //ReadDirectory
+    Directory d;
+    vector<int> p;
+    p.push_back(-1);
+    p.push_back(-1);
+    p.push_back(-1);    
+    ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
+	if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+	{				 // perror("some error occurred in pread");
+		return p;
+	}
+    // get key in bit representation
+    int * keyInBits = decToBinary(newKey);
+    // get the bucket that the key will be inserted into
+    
+    //get the bucket record in the directory table
+    int bucketRecordId = binaryToDecimal(keyInBits,d.depth);
+    DirectoryRecord bucketRecord = d.records[bucketRecordId];
 
+    //get the bucket
+    Bucket bucket;
+    result = pread(fbh, &bucket, sizeof(Bucket), bucketRecord.offset);
+
+    for (size_t i = 0; i < RECORDSPERBUCKET; i++)
+    {   // Check if this is the key we are searching for
+        if (bucket.dataItem[i].valid == 1 && bucket.dataItem[i].key == key)
+        {
+            p.push_back(bucketRecordId); //id of directory 
+            p.push_back(bucketRecord.offset); //bucket offset holding the record
+            p.push_back(i); // index of the record in the data items array
+        }
+    }
+
+    return p;
 
 }
 
@@ -319,16 +339,18 @@ int searchItem(int fdh, int fbh, int key){
 /* Function to colapse the directory file if possible 
    fdh: file handle of directory file
 
-   returns depth of directory file (global depth)
+   updates the directory file after decreasing the depth
+   and returns the new global depth
 */
-/*
-void colapseDirectory(int fdh){
-    struct Directory read_dir_data;
+
+int colapseDirectory(int fdh){
+    Directory read_dir_data;
     Directory write_dir_data;
-    ssize_t result_r = pread(fdh, &read_dir_data, sizeof(Directory), 0);
+    pread(fdh, &read_dir_data, sizeof(Directory), 0);
     int new_depth = read_dir_data.depth;
+    int size = (int)pow(2,read_dir_data.depth);
     bool can_colapse = true;
-    for(int i =0; i<read_dir_data.records.size()/2; i++){
+    for(int i =0; i<size/2; i++){
         if(read_dir_data.records[2*i].offset != read_dir_data.records[2*i+1].offset){
             can_colapse = false;
             break;
@@ -337,24 +359,25 @@ void colapseDirectory(int fdh){
 
     if(can_colapse){
         new_depth = read_dir_data.depth - 1;
-        vector<DirectoryRecord> new_records;
         
-        for(int i =0; i<read_dir_data.records.size()/2; i++){
-            struct DirectoryRecord record;
+        write_dir_data.records = new DirectoryRecord[size/2];
+        for(int i =0; i<size/2; i++){
+            DirectoryRecord record;
             record.id = read_dir_data.records[2*i].id / 2;
             record.offset = read_dir_data.records[2*i].offset;
-            new_records.push_back(record);
+            write_dir_data.records[i] = record;
         }
 
         write_dir_data.depth = new_depth;
-        write_dir_data.records = new_records;
+
         int result_w = pwrite(fdh, &write_dir_data, sizeof(Directory), 0);
         if (result_w < sizeof(Directory)){
             perror("some error occurred in pwrite while wrting the new directory file.");
         }
     }
-    DisplayDirectoriesFile(fdh);
-}*/
+
+    return new_depth;
+}
 
 
 // delete a key if exist 
@@ -366,12 +389,6 @@ void colapseDirectory(int fdh){
    else 1;
 */
 int deleteItem(int fdh, int fbh, int key){
-
-
-}
-
-
-int DisplayBucketsFile(int fbh){
 
 
 }
