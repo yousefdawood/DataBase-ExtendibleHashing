@@ -427,6 +427,9 @@ int colapseDirectory(int fdh)
         }
     }
 
+    if (!can_colapse)
+        return -1;
+
     return new_depth;
 }
 
@@ -539,7 +542,7 @@ int deleteItem(int fdh, int fbh, int key)
 
     // 3- check if the total keys is smaller than or equal the allowed records in bucket
 
-    if (keysINbuckets.size() <= RECORDSPERBUCKET)
+    if (keysINbuckets.size() <= RECORDSPERBUCKET && budyBucketOffset != offset)
     {
         // 4 - merge buckets and delete first bucket
 
@@ -589,7 +592,13 @@ int deleteItem(int fdh, int fbh, int key)
 
     // 8 - check if I can collapse the directory file
 
-    colapseDirectory(fdh);
+    bool canCOllapse = true;
+    while (canCOllapse)
+    {
+        int flag = colapseDirectory(fdh);
+        if (flag == -1)
+            canCOllapse = false;
+    }
 
     return 1;
 }
