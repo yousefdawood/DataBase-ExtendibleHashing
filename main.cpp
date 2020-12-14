@@ -3,7 +3,9 @@
 #include <string.h>
 
 using namespace std;
-
+void InsertSimpleTestCase(int fdh, int fbh);
+void InsertAdvancedTestCase1(int fdh, int fbh);
+void InsertDeleteTestCase1(int fdh, int fbh);
 void TestCase(int fdh, int fbh)
 {
 
@@ -53,7 +55,8 @@ int main()
     DisplayDirectoriesFile(fdh, fbh);
     printf("---------------------------------------------------------------------\n");
 
-    TestCase(fdh, fbh);
+    //TestCase(fdh, fbh);
+    InsertDeleteTestCase1(fdh,fbh);
     // close file handlers and remove files
     close(fdh);
     close(fbh);
@@ -62,4 +65,40 @@ int main()
     remove("DirectoryFile");
 
     return 0;
+}
+void InsertSimpleTestCase(int fdh, int fbh){
+    insertItem(fdh,fbh,0);
+    insertItem(fdh,fbh,31);
+    insertItem(fdh,fbh,5);
+    insertItem(fdh,fbh,16);
+    insertItem(fdh,fbh,8);
+    insertItem(fdh,fbh,3);
+    insertItem(fdh,fbh,7);
+    insertItem(fdh,fbh,24);
+    insertItem(fdh,fbh,12);
+    insertItem(fdh,fbh,13);
+    insertItem(fdh,fbh,25);
+    insertItem(fdh,fbh,1);
+    DisplayDirectoriesFile(fdh, fbh);
+}
+void InsertAdvancedTestCase1(int fdh, int fbh){
+    insertItem(fdh, fbh, 1);
+    insertItem(fdh, fbh, 2);
+    insertItem(fdh, fbh, 3);
+    insertItem(fdh, fbh, 31);
+    insertItem(fdh, fbh, 30);
+    insertItem(fdh, fbh, 16);
+    DisplayDirectoriesFile(fdh, fbh);
+}
+void InsertDeleteTestCase1(int fdh, int fbh){
+    insertItem(fdh, fbh, 1);
+    insertItem(fdh, fbh, 2);
+    insertItem(fdh, fbh, 3);
+    insertItem(fdh, fbh, 31);
+    insertItem(fdh, fbh, 30);
+    insertItem(fdh, fbh, 16);
+    deleteItem(fdh, fbh, 31);
+    deleteItem(fdh, fbh, 30);
+    deleteItem(fdh, fbh, 16);
+    DisplayDirectoriesFile(fdh, fbh);
 }
