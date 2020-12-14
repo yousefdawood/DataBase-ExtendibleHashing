@@ -1,8 +1,6 @@
 #include "readfile.h"
 #include <iostream>
 
-#include"readfile.cpp"
-#include"extendibleHashing.cpp"
 using namespace std;
 
 int main(){

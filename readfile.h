@@ -67,7 +67,7 @@ int deleteItem(int fdh, int fbh, int key);
 int insertItem(int fdh, int fbh, int key);
 int DisplayBucketsFile(int fbh);
 int DisplayDirectoriesFile(int fdh, int fbh);
-int searchItem(int fdh, int fbh, int key, int *count);
-void colapseDirectory(int fdh);
+vector<int> searchItem(int fdh, int fbh, int key);
+int colapseDirectory(int fdh);
 
 #endif /* READFILE_H_ */
