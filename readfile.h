@@ -68,5 +68,6 @@ vector<int> searchItem(int fdh, int fbh, int key);
 int colapseDirectory(int fdh);
 int getBudyBucket(int dirId, int depth);
 int binaryToDecimal(int *n, int size);
+void searchResult(int fdh, int fbh, int key);
 
 #endif /* READFILE_H_ */
