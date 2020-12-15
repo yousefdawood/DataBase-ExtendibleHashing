@@ -4,6 +4,73 @@
 
 using namespace std;
 void InsertSimpleTestCase(int fdh, int fbh);
+void InsertAdvancedTestCase1(int fdh, int fbh);
+void InsertDeleteTestCase1(int fdh, int fbh);
+void TestCase(int fdh, int fbh);
+
+int main()
+{
+
+    int fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+    int fbh = createFile(DATAFILESIZE, "DataFile", 1);
+    DisplayDirectoriesFile(fdh, fbh);
+    printf("---------------------------------------------------------------------\n");
+
+    int type;
+
+    do
+    {
+        printf("\n\nChoose Test Case\n\n");
+        printf("1. InsertSimpleTestCase\n");
+        printf("2. InsertAdvancedTestCase1\n");
+        printf("3. InsertDeleteTestCase1\n");
+        printf("4. Sheet Test Case\n");
+        printf("5. Exit\n");
+        scanf("%d", &type);
+
+        switch (type)
+        {
+        case 1:
+
+            InsertSimpleTestCase(fdh, fbh);
+            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+            break;
+        case 2:
+
+            InsertAdvancedTestCase1(fdh, fbh);
+            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+            break;
+
+        case 3:
+            InsertDeleteTestCase1(fdh, fbh);
+            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+            break;
+
+        case 4:
+            TestCase(fdh, fbh);
+            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+            break;
+
+        case 5:
+            printf("Goodbye\n");
+
+            break;
+        default:
+            printf("Wrong Choice. Enter again\n");
+            break;
+        }
+
+    } while (type != 5);
+
+    return 0;
+
+    return 0;
+}
+
 void TestCase(int fdh, int fbh)
 {
 
@@ -43,26 +110,14 @@ void TestCase(int fdh, int fbh)
     deleteItem(fdh, fbh, 1074);
     printf("---------------------------------------------------------------------\n");
     DisplayDirectoriesFile(fdh, fbh);
-}
 
-int main()
-{
-
-    int fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
-    int fbh = createFile(DATAFILESIZE, "DataFile", 1);
-    DisplayDirectoriesFile(fdh, fbh);
-    printf("---------------------------------------------------------------------\n");
-
-    //TestCase(fdh, fbh);
-    TestCase(fdh, fbh);
     // close file handlers and remove files
+
     close(fdh);
     close(fbh);
 
     remove("DataFile");
     remove("DirectoryFile");
-
-    return 0;
 }
 void InsertSimpleTestCase(int fdh, int fbh)
 {
@@ -79,4 +134,64 @@ void InsertSimpleTestCase(int fdh, int fbh)
     insertItem(fdh, fbh, 25);
     insertItem(fdh, fbh, 1);
     DisplayDirectoriesFile(fdh, fbh);
+
+    // close file handlers and remove files
+
+    close(fdh);
+    close(fbh);
+
+    remove("DataFile");
+    remove("DirectoryFile");
+}
+void InsertAdvancedTestCase1(int fdh, int fbh)
+{
+    insertItem(fdh, fbh, 1);
+    insertItem(fdh, fbh, 2);
+    insertItem(fdh, fbh, 3);
+    insertItem(fdh, fbh, 31);
+    insertItem(fdh, fbh, 30);
+    insertItem(fdh, fbh, 16);
+    DisplayDirectoriesFile(fdh, fbh);
+
+    // close file handlers and remove files
+
+    close(fdh);
+    close(fbh);
+
+    remove("DataFile");
+    remove("DirectoryFile");
+}
+void InsertDeleteTestCase1(int fdh, int fbh)
+{
+    insertItem(fdh, fbh, 1);
+    insertItem(fdh, fbh, 2);
+    insertItem(fdh, fbh, 3);
+    insertItem(fdh, fbh, 31);
+    insertItem(fdh, fbh, 30);
+    insertItem(fdh, fbh, 16);
+    printf("---------------------------------------------------------------------\n");
+
+    DisplayDirectoriesFile(fdh, fbh);
+    printf("---------------------------------------------------------------------\n");
+
+    deleteItem(fdh, fbh, 31);
+    deleteItem(fdh, fbh, 30);
+    deleteItem(fdh, fbh, 16);
+    printf("---------------------------------------------------------------------\n");
+    DisplayDirectoriesFile(fdh, fbh);
+
+    printf("---------------------------------------------------------------------\n");
+
+    deleteItem(fdh, fbh, 2);
+
+    printf("---------------------------------------------------------------------\n");
+    DisplayDirectoriesFile(fdh, fbh);
+
+    // close file handlers and remove files
+
+    close(fdh);
+    close(fbh);
+
+    remove("DataFile");
+    remove("DirectoryFile");
 }

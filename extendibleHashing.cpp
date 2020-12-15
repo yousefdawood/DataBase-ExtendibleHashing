@@ -1,6 +1,8 @@
 #include "readfile.h"
 using namespace std;
 
+bool CanBucketsMerged(int fdh, int fbh, int offset);
+
 int modeHashCode(int key)
 {
     return key % HASHNUMBER;
@@ -393,7 +395,7 @@ int colapseDirectory(int fdh)
     pread(fdh, &read_dir_data, sizeof(Directory), 0);
     int new_depth = read_dir_data.depth;
     if (new_depth == 1)
-        return 1;
+        return -1;
     int size = (int)pow(2, read_dir_data.depth);
     bool can_colapse = true;
     for (int i = 0; i < size / 2; i++)
@@ -433,6 +435,183 @@ int colapseDirectory(int fdh)
     return new_depth;
 }
 
+void mergeCheck(int fdh, int fbh)
+{
+    Directory d;
+    ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
+    if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+    {                // perror("some error occurred in pread");
+        return;
+    }
+
+    // printf("--------------------------------------------------------------------\n");
+
+    // DisplayDirectoriesFile(fdh, fbh);
+    // printf("---------------------------------------------------------------------\n");
+
+    bool flag = true;
+
+    while (flag)
+    {
+        for (int i = 0; i < (int)pow(2, d.depth); i++)
+        {
+            // cout << i << " iiiiiiiiiiiiiiiiiiiiiii" << endl;
+            CanBucketsMerged(fdh, fbh, d.records[i].offset);
+        }
+
+        Directory d2;
+        ssize_t result2 = pread(fdh, &d2, sizeof(Directory), 0);
+        if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+        {                // perror("some error occurred in pread");
+            return;
+        }
+        if (d.depth > d2.depth)
+        {
+            d = d2;
+        }
+        else
+        {
+            flag = false;
+        }
+    }
+}
+
+bool CanBucketsMerged(int fdh, int fbh, int offset)
+{
+    Bucket bucket;
+    int dirId;
+    ssize_t result = pread(fbh, &bucket, sizeof(Bucket), offset);
+    Directory d;
+
+    result = pread(fdh, &d, sizeof(Directory), 0);
+    if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+    {                // perror("some error occurred in pread");
+        return -3;
+    }
+
+    for (int i = 0; i < (int)pow(2, d.depth); i++)
+    {
+        if (d.records[i].offset == offset)
+        {
+            dirId = d.records[i].id;
+            break;
+        }
+    }
+
+    // cout << "offset number ----------------------" << offset << endl;
+    // cout << "dirId ----------------------" << dirId << endl;
+
+    bool flag = true;
+    // check if buckets can be merged
+
+    // 1 - get the remaining keys in the first bucket
+
+    vector<int> keysINbuckets;
+    int count = 0;
+    for (size_t i = 0; i < RECORDSPERBUCKET; i++)
+    {
+        if (bucket.dataItem[i].valid == 1)
+        {
+            count++;
+            keysINbuckets.push_back(bucket.dataItem[i].key);
+        }
+    }
+
+    // 2- get budy bucket keys
+
+    int budyBucket = getBudyBucket(dirId, bucket.depth);
+
+    // cout << "budyBucket ->" << budyBucket << endl;
+
+    result = pread(fdh, &d, sizeof(Directory), 0);
+    if (result <= 0) //either an error happened in the pread or it hit an unallocated space
+    {                // perror("some error occurred in pread");
+        return -3;
+    }
+    int budyBucketOffset = d.records[budyBucket].offset;
+    // cout << "budyBucketoffset ->" << budyBucketOffset << endl;
+
+    // get the bucket
+    Bucket bucket2;
+    result = pread(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
+
+    for (int i = 0; i < RECORDSPERBUCKET; i++)
+    {
+        if (bucket2.dataItem[i].valid == 1)
+        {
+            keysINbuckets.push_back(bucket2.dataItem[i].key);
+        }
+    }
+
+    // 3- check if the total keys is smaller than or equal the allowed records in bucket
+
+    // cout << "Key sizes = " << keysINbuckets.size() << endl;
+
+    if (keysINbuckets.size() <= RECORDSPERBUCKET && budyBucketOffset != offset)
+    {
+        // 4 - merge buckets and delete first bucket
+
+        // cout << " Merging ................" << endl;
+
+        bucket2.valid = 0;
+        pwrite(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
+
+        // 5 - change offset of the dir that point to the deleted record to the budy bucket
+
+        Directory newDirectory;
+        newDirectory.depth = d.depth;
+        newDirectory.records = d.records;
+
+        newDirectory.records[budyBucket].offset = newDirectory.records[dirId].offset;
+
+        // 6- change depth of the body bucket and merge content
+
+        bucket.depth--;
+
+        for (int i = 0; i < RECORDSPERBUCKET; i++)
+        {
+            if (bucket.dataItem[i].valid == 1)
+            {
+                bucket.dataItem[i].valid = 0;
+            }
+        }
+
+        for (int i = 0; i < keysINbuckets.size(); i++)
+        {
+
+            bucket.dataItem[i].valid = 1;
+            bucket.dataItem[i].key = keysINbuckets[i];
+        }
+
+        // 7 -  write the change in the file
+
+        pwrite(fbh, &bucket, sizeof(Bucket), offset);
+        ssize_t r = pwrite(fdh, &newDirectory, sizeof(Directory), 0);
+    }
+    else
+    {
+        flag = false;
+        // cout << " Not Merging ................" << endl;
+    }
+
+    // 8 - check if I can collapse the directory file
+
+    // printf("-------------------------BEfore collpasing-------------------------------------------\n");
+
+    // DisplayDirectoriesFile(fdh, fbh);
+    // printf("---------------------------------------------------------------------\n");
+
+    bool canCOllapse = true;
+    while (canCOllapse)
+    {
+        int f = colapseDirectory(fdh);
+        if (f == -1)
+            canCOllapse = false;
+    }
+
+    return flag;
+}
+
 // delete a key if exist
 /* fdh: file handle of directory file
    fbh: file handle of buckets file
@@ -469,136 +648,17 @@ int deleteItem(int fdh, int fbh, int key)
 
     cout << " Key ->  " + to_string(key) + " deleted successfully\n ";
 
-    // check if buckets can be merged
-
-    // 1 - get the remaining keys in the first bucket
-
-    vector<int> keysINbuckets;
-    int count = 0;
-    for (size_t i = 0; i < RECORDSPERBUCKET; i++)
+    bool cont = true;
+    while (cont)
     {
-        if (bucket.dataItem[i].valid == 1)
-        {
-            count++;
-            keysINbuckets.push_back(bucket.dataItem[i].key);
-        }
-    }
-    /*
-    // if (count == 0)
-    // {
-    //     // if bucket become empty delete bucket and adjust directory point to its budy bucket
-    //     bucket.valid = 0;
-    //     pwrite(fbh, &bucket, sizeof(Bucket), offset);
-    //     int budyBucket = getBudyBucket(dirId, bucket.depth);
+        cont = CanBucketsMerged(fdh, fbh, offset);
+        // printf("---------------------------------------------------------------------\n");
 
-    //     Directory d;
-
-    //     ssize_t result = pread(fdh, &d, sizeof(Directory), 0);
-    //     if (result <= 0) //either an error happened in the pread or it hit an unallocated space
-    //     {                // perror("some error occurred in pread");
-    //         return -3;
-    //     }
-
-    //     // change offset of the dir that point to the deleted record
-
-    //     Directory newDirectory;
-    //     newDirectory.depth = d.depth;
-    //     newDirectory.records = d.records;
-
-    //     cout << "first offset " << newDirectory.records[dirId].offset << "   second offset " << newDirectory.records[budyBucket].offset << endl;
-
-    //     newDirectory.records[dirId].offset = newDirectory.records[budyBucket].offset;
-
-    //     ssize_t r = pwrite(fdh, &newDirectory, sizeof(Directory), 0);
-
-    //     colapseDirectory(fdh);
-    // }
-    //else // check if this bucket can be merged with its budy bucket
-    */
-
-    // 2- get budy bucket keys
-
-    int budyBucket = getBudyBucket(dirId, bucket.depth);
-    Directory d;
-
-    result = pread(fdh, &d, sizeof(Directory), 0);
-    if (result <= 0) //either an error happened in the pread or it hit an unallocated space
-    {                // perror("some error occurred in pread");
-        return -3;
-    }
-    int budyBucketOffset = d.records[budyBucket].offset;
-
-    // get the bucket
-    Bucket bucket2;
-    result = pread(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
-
-    for (int i = 0; i < RECORDSPERBUCKET; i++)
-    {
-        if (bucket2.dataItem[i].valid == 1)
-        {
-            keysINbuckets.push_back(bucket2.dataItem[i].key);
-        }
+        // DisplayDirectoriesFile(fdh, fbh);
+        // printf("---------------------------------------------------------------------\n");
     }
 
-    // 3- check if the total keys is smaller than or equal the allowed records in bucket
-
-    if (keysINbuckets.size() <= RECORDSPERBUCKET && budyBucketOffset != offset)
-    {
-        // 4 - merge buckets and delete first bucket
-
-        bucket.valid = 0;
-        pwrite(fbh, &bucket, sizeof(Bucket), offset);
-
-        Directory d;
-
-        result = pread(fdh, &d, sizeof(Directory), 0);
-        if (result <= 0) //either an error happened in the pread or it hit an unallocated space
-        {                // perror("some error occurred in pread");
-            return -3;
-        }
-
-        // 5 - change offset of the dir that point to the deleted record to the budy bucket
-
-        Directory newDirectory;
-        newDirectory.depth = d.depth;
-        newDirectory.records = d.records;
-
-        newDirectory.records[dirId].offset = newDirectory.records[budyBucket].offset;
-
-        // 6- change depth of the body bucket and merge content
-
-        bucket2.depth--;
-
-        for (int i = 0; i < RECORDSPERBUCKET; i++)
-        {
-            if (bucket2.dataItem[i].valid == 1)
-            {
-                bucket2.dataItem[i].valid = 0;
-            }
-        }
-
-        for (int i = 0; i < keysINbuckets.size(); i++)
-        {
-
-            bucket2.dataItem[i].valid = 1;
-            bucket2.dataItem[i].key = keysINbuckets[i];
-        }
-
-        // 7 -  write the change in the file
-
-        pwrite(fbh, &bucket2, sizeof(Bucket), budyBucketOffset);
-        ssize_t r = pwrite(fdh, &newDirectory, sizeof(Directory), 0);
-    }
-
-    // 8 - check if I can collapse the directory file
-
-    bool canCOllapse = true;
-    while (canCOllapse)
-    {
-        int flag = colapseDirectory(fdh);
-        if (flag == -1)
-            canCOllapse = false;
-    }
+    mergeCheck(fdh, fbh);
 
     return 1;
 }
