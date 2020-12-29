@@ -53,7 +53,7 @@ struct DirectoryRecord
 struct Directory
 {
    int depth; //Global depth
-   DirectoryRecord *records;
+   DirectoryRecord records[50];
 };
 
 //Check the create File

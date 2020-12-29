@@ -51,13 +51,25 @@ int main()
 
         case 4:
             TestCase(fdh, fbh);
-            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
-            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+            //fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            //fbh = createFile(DATAFILESIZE, "DataFile", 1);
             break;
 
         case 5:
             printf("Goodbye\n");
 
+            break;
+        case 6:
+             DisplayDirectoriesFile(fdh, fbh);
+            insertItem(fdh,fbh,20);
+             DisplayDirectoriesFile(fdh, fbh);
+            break;
+        case 7:
+            fdh = createFile(DIRECTORYFILESIZE, "DirectoryFile", 0);
+            fbh = createFile(DATAFILESIZE, "DataFile", 1);
+             DisplayDirectoriesFile(fdh, fbh);
+            close(fdh);
+            close(fbh);
             break;
         default:
             printf("Wrong Choice. Enter again\n");
@@ -116,8 +128,8 @@ void TestCase(int fdh, int fbh)
     close(fdh);
     close(fbh);
 
-    remove("DataFile");
-    remove("DirectoryFile");
+    //remove("DataFile");
+    //remove("DirectoryFile");
 }
 void InsertSimpleTestCase(int fdh, int fbh)
 {

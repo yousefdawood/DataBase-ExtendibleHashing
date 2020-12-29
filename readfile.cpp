@@ -47,7 +47,7 @@ int createFile(int size,char * name, int type)
     if(type == 0)// Directory
     {
         Directory d;
-        d.records = new DirectoryRecord[2];
+        //d.records = new DirectoryRecord[2];
         d.depth = 1;
         DirectoryRecord r;
         r.id = 0;

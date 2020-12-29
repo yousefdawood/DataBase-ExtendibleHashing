@@ -202,7 +202,7 @@ int insertItem(int fdh, int fbh, int key)
         Directory newDirectory;
         // increase depth by 1
         newDirectory.depth = d.depth + 1;
-        newDirectory.records = new DirectoryRecord[(int)pow(2, newDirectory.depth)];
+        //newDirectory.records = new DirectoryRecord[(int)pow(2, newDirectory.depth)];
 
         //handle the pointers
         int dSize = (int)pow(2, d.depth);
@@ -411,7 +411,7 @@ int colapseDirectory(int fdh)
     {
         new_depth = read_dir_data.depth - 1;
 
-        write_dir_data.records = new DirectoryRecord[size / 2];
+        //write_dir_data.records = new DirectoryRecord[size / 2];
         for (int i = 0; i < size / 2; i++)
         {
             DirectoryRecord record;
@@ -560,7 +560,10 @@ bool CanBucketsMerged(int fdh, int fbh, int offset)
 
         Directory newDirectory;
         newDirectory.depth = d.depth;
-        newDirectory.records = d.records;
+        for(int k = 0; k<=50;k++){
+            newDirectory.records[k] = d.records[k];
+        }
+        //newDirectory.records = d.records;
 
         newDirectory.records[budyBucket].offset = newDirectory.records[dirId].offset;
 
@@ -657,9 +660,9 @@ int deleteItem(int fdh, int fbh, int key)
         // DisplayDirectoriesFile(fdh, fbh);
         // printf("---------------------------------------------------------------------\n");
     }
-
+    cout<<"Before merge check"<<endl;
     mergeCheck(fdh, fbh);
-
+    cout<<"After merge check"<<endl;
     return 1;
 }
 
